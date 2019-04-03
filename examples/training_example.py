@@ -8,12 +8,17 @@ from anago.utils import load_data_and_labels
 from anago.models import BiLSTMCRF
 from anago.preprocessing import IndexTransformer
 from anago.trainer import Trainer
+from anago.models import save_model
+import numpy as np
 
 
 def main(args):
     print('Loading dataset...')
     x_train, y_train = load_data_and_labels(args.train_data)
     x_valid, y_valid = load_data_and_labels(args.valid_data)
+    x_test, y_test = load_data_and_labels(args.test_data)
+    x_train = np.r_[x_train, x_valid, x_test]
+    y_train = np.r_[y_train, y_valid, y_test]
 
     print('Transforming datasets...')
     p = IndexTransformer(use_char=args.no_char_feature)
@@ -35,10 +40,10 @@ def main(args):
 
     print('Training the model...')
     trainer = Trainer(model, preprocessor=p)
-    trainer.train(x_train, y_train, x_valid, y_valid)
+    trainer.train(x_train, y_train, x_valid, y_valid, epochs=args.max_epoch)
 
     print('Saving the model...')
-    model.save(args.weights_file, args.params_file)
+    save_model(model, args.weights_file, args.params_file)
     p.save(args.preprocessor_file)
 
 
@@ -47,8 +52,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training a model')
     parser.add_argument('--train_data', default=os.path.join(DATA_DIR, 'train.txt'), help='training data')
     parser.add_argument('--valid_data', default=os.path.join(DATA_DIR, 'valid.txt'), help='validation data')
+    parser.add_argument('--test_data', default=os.path.join(DATA_DIR, 'test.txt'), help='test data')
     parser.add_argument('--weights_file', default='weights.h5', help='weights file')
     parser.add_argument('--params_file', default='params.json', help='parameter file')
+    parser.add_argument('--preprocessor_file', default='preprocessor.json', help='preprocessor file')
     # Training parameters
     parser.add_argument('--loss', default='categorical_crossentropy', help='loss')
     parser.add_argument('--optimizer', default='adam', help='optimizer')

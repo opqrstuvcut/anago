@@ -1,0 +1,5 @@
+python ./training_example.py \
+--train_data ../../dataset/train.txt \
+--valid_data ../../dataset/validation.txt \
+--test_data ../../dataset/test.txt \
+--max_epoch 12
